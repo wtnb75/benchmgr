@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=schema.yaml
+---
+- name: ab
+  url: https://httpd.apache.org/docs/2.4/programs/ab.html
+  install:
+    alpine: apk add apache2-utils
+    darwin: ab -V # included in system
+    debian: apt install apache2-utils
+  command: ab
+  run:
+    - "-c"
+    - "{{concurrency}}"
+    - "-t"
+    - "{{duration_sec}}"
+    - "-m"
+    - "{{method}}"
+    - "{{url}}"
+  result:
+    - '^Concurrency Level:\s+(?P<concurrency>\d+)$'
+    - '^Complete requests:\s+(?P<success>\d+)$'
+    - '^Failed requests:\s+(?P<fail>\d+)$'
+    - '^Requests per second:\s+(?P<reqs>\d+\.\d+) '
+    - '^Total:\s+(?P<min_ms>\d+)\s+(?P<mean_ms>\d+)\s+(?P<stddev_ms>\d+\.\d+)\s+(?P<median_ms>\d+)\s+(?P<max_ms>\d+)$'
+    - '^\s+(?P<percentile>\d+)%\s+(?P<percentile_ms>\d+)'
+- name: wrk
+  url: https://github.com/wg/wrk
+  install:
+    alpine: apk add wrk
+    darwin: brew install wrk
+    debian: apt install wrk
+  command: wrk
+  run:
+    - "--latency"
+    - "--threads"
+    - "{{[concurrency, cpus]|min}}"
+    - "--connections"
+    - "{{concurrency}}"
+    - "--duration"
+    - "{{duration_sec|int}}"
+    - "{{url}}"
+  result:
+    - '^\s+(?P<threads>\d+) threads and (?P<connections>\d+) connections$'
+    - '^\s+Latency\s+(?P<avg_time>\d+\.\d+(ms|us))\s+(?P<stdev_time>\d+\.\d+(ms|us))\s+(?P<max_time>\d+\.\d+(ms|us))'
+    - '^Requests/sec:\s+(?P<reqs>\d+\.\d+)$'
+    - '^\s+(?P<percentile>\d+)%\s+(?P<percentile_time>\d+\.\d+(ms|us))'
+- name: hey
+  url: https://github.com/rakyll/hey
+  install:
+    alpine: apk add hey
+    darwin: brew install hey
+    debian: apt install hey
+    source: go install github.com/rakyll/hey@latest
+  command: hey
+  run:
+    - "-c={{concurrency}}"
+    - "-z={{duration_sec}}s"
+    - "-m={{method}}"
+    - "{{url}}"
+  result:
+    - '^\s+(?P<percentile>\d+)% in (?P<percentile_sec>\d+\.\d+) secs$'
+    - '^\s+Slowest:\s+(?P<max_sec>\d+\.\d+) secs$'
+    - '^\s+Fastest:\s+(?P<min_sec>\d+\.\d+) secs$'
+    - '^\s+Average:\s+(?P<avg_sec>\d+\.\d+) secs$'
+    - '^\s+Requests/sec:\s+(?P<reqs>\d+\.\d+)$'
+- name: go-wrk
+  url: https://github.com/tsliwowicz/go-wrk
+  install:
+    source: go install github.com/tsliwowicz/go-wrk@latest
+  command: go-wrk
+  run:
+    - "-c={{concurrency}}"
+    - "-d={{duration_sec|int}}"
+    - "-M={{method}}"
+    - "{{url}}"
+  result:
+    - '^\s+(?P<goroutines>\d+) goroutine(s) running concurrently$'
+    - '^Requests/sec:\s+(?P<reqs>\d+(\.\d+)?)$'
+    - '^Fastest Request:\s+(?P<min_time>\d+(\.\d+)?(µs|ms))$'
+    - '^Avg Req Time:\s+(?P<avg_time>\d+(\.\d+)?(µs|ms))$'
+    - '^stddev:\s+(?P<stddev_time>\d+(\.\d+)?(µs|ms))$'
+    - '^Slowest Request:\s+(?P<max_time>\d+(\.\d+)?(µs|ms))$'
+    - '^(?P<percentile>\d+)%:\s+(?P<percentile_time>\d+(\.\d+)?(µs|ms)'
+- name: rewrk
+  install:
+    source: cargo install rewrk --git https://github.com/ChillFish8/rewrk.git
+  command: rewrk
+  run:
+    - "-c={{concurrency}}"
+    - "-d={{duration_sec|int}}s"
+    - "--pct"
+    - "--host={{url}}"
+  result:
+    - '^Benchmarking (?P<concurrency>\d+) connections'
+    - '^\s+(?P<avg_time>\d+\.\d+(ms|us))\s+(?P<stddev_time>\d+\.\d+(ms|us))\s+(?P<min_time>\d+\.\d+)ms\s+(?P<max_ms>\d+\.\d+(ms|us))$'
+    - 'Req/Sec: (?P<reqs>\d+\.\d+)$'
+    - '^\|\s+(?P<percentile>\d+(\.\d+)?)%\s+\|\s+(?P<percentile_time>\d+\.\d+(ms|us))\s+\|$'
