@@ -7,6 +7,7 @@ services:
     image: nginx:1-alpine
     volumes:
       - ./data/nginx:/etc/nginx/conf.d:ro
+      - sock:/sock
     ports:
       - 3001:80/tcp
 
@@ -36,6 +37,7 @@ services:
     image: ghcr.io/wtnb75/ziphttp:main
     volumes:
       - ./data/ziphttp:/zip:ro
+      - sock:/sock
     environment:
       ZIPHTTP_ARCHIVE: /zip/content.zip
     command:
@@ -52,6 +54,8 @@ services:
     command:
       - /empty-go
       - -listen=:80
+    volumes:
+      - sock:/sock
     ports:
       - 3005:80/tcp
 
@@ -63,6 +67,7 @@ services:
       dockerfile: Dockerfile.yaegi
     volumes:
       - ./golang:/w
+      - sock:/sock
     working_dir: /w
     command:
       - main.go
@@ -74,6 +79,8 @@ services:
     # http://localhost:3007/
     # http://rust/
     build: ./rust
+    volumes:
+      - sock:/sock
     command:
       - /empty-rs
       - "0.0.0.0"
@@ -85,6 +92,8 @@ services:
     # http://localhost:3008/
     # http://mongoose/
     build: ./mongoose
+    volumes:
+      - sock:/sock
     command:
       - /server
     ports:
@@ -94,6 +103,8 @@ services:
     # http://localhost:3009/
     # http://fastapi/
     build: ./python-fastapi
+    volumes:
+      - sock:/sock
     command:
       - uvicorn
       - main:app
@@ -112,6 +123,8 @@ services:
   pypy:
     # http://localhost:3010/
     # http://pypy/
+    volumes:
+      - sock:/sock
     build:
       context: ./python-fastapi
       dockerfile: Dockerfile.pypy
@@ -133,6 +146,7 @@ services:
     # http://node/
     image: node:25-alpine
     volumes:
+      - sock:/sock
       - ./nodejs:/w
     working_dir: /w
     command:
@@ -145,6 +159,8 @@ services:
     # http://localhost:3012/
     # http://ruby/
     build: ./ruby
+    volumes:
+      - sock:/sock
     command:
       - puma
       - -C
@@ -160,8 +176,12 @@ services:
   client:
     build: ./client
     volumes:
+      - sock:/sock
       - ./:/w
     working_dir: /w
     command:
       - sleep
       - infinity
+
+volumes:
+  sock:

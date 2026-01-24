@@ -94,3 +94,13 @@
     - '^\s+(?P<avg_time>\d+\.\d+(ms|us))\s+(?P<stddev_time>\d+\.\d+(ms|us))\s+(?P<min_time>\d+\.\d+)ms\s+(?P<max_ms>\d+\.\d+(ms|us))$'
     - 'Req/Sec: (?P<reqs>\d+\.\d+)$'
     - '^\|\s+(?P<percentile>\d+(\.\d+)?)%\s+\|\s+(?P<percentile_time>\d+\.\d+(ms|us))\s+\|$'
+- name: h2load
+  install:
+    debian: apt install nghttp2-client
+    alpine: apk add nghttp2
+  command: h2load
+  run:
+    - "--threads={{[concurrency, cpus]|min}}"
+    - "--clients={{concurrency}}"
+    - "--duration={{duration_sec}}"
+    - "{{url}}"
