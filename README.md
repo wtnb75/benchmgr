@@ -28,7 +28,10 @@
 then we got:
 
 ![benchmark result](./results.svg)
-benchmark result
+barplot
+
+![detailed result](./detailed.svg)
+plot
 
 ## server setup
 
