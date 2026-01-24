@@ -1,0 +1,6 @@
+FROM pypy:3-trixie
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install -y cargo --no-install-recommends
+COPY . /src
+WORKDIR /src
+RUN pip install -r requirements.txt

@@ -1,0 +1,187 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/refs/heads/main/schema/compose-spec.json
+---
+services:
+  nginx:
+    # http://localhost:3001/
+    # http://nginx/
+    image: nginx:1-alpine
+    volumes:
+      - ./data/nginx:/etc/nginx/conf.d:ro
+      - sock:/sock
+    ports:
+      - 3001:80/tcp
+
+  apache:
+    # http://localhost:3002/
+    # http://apache/
+    image: httpd:2-alpine
+    volumes:
+      - ./data/httpd:/usr/local/apache2/conf:ro
+    ports:
+      - 3002:80/tcp
+  traefik:
+    # http://localhost:3003/ping
+    # http://traefik/ping
+    image: traefik:v2
+    command:
+      - --ping=true
+      - --ping.entryPoint=ping
+      - --entryPoints.ping.address=:80
+      - --accesslog=false
+    ports:
+      - 3003:80/tcp
+
+  ziphttp:
+    # http://localhost:3004/
+    # http://ziphttp/
+    image: ghcr.io/wtnb75/ziphttp:main
+    volumes:
+      - ./data/ziphttp:/zip:ro
+      - sock:/sock
+    environment:
+      ZIPHTTP_ARCHIVE: /zip/content.zip
+    command:
+      - webserver
+      - --listen=:80
+      - --quiet
+    ports:
+      - 3004:80/tcp
+
+  golang:
+    # http://localhost:3005/
+    # http://golang/
+    build: ./golang
+    command:
+      - /empty-go
+      - -listen=:80
+    volumes:
+      - sock:/sock
+    ports:
+      - 3005:80/tcp
+
+  yaegi:
+    # http://localhost:3006/
+    # http://yaegi/
+    build:
+      context: ./golang
+      dockerfile: Dockerfile.yaegi
+    volumes:
+      - ./golang:/w
+      - sock:/sock
+    working_dir: /w
+    command:
+      - main.go
+      - -listen=:80
+    ports:
+      - 3006:80/tcp
+
+  rust:
+    # http://localhost:3007/
+    # http://rust/
+    build: ./rust
+    volumes:
+      - sock:/sock
+    command:
+      - /empty-rs
+      - "0.0.0.0"
+      - "80"
+    ports:
+      - 3007:80/tcp
+
+  mongoose:
+    # http://localhost:3008/
+    # http://mongoose/
+    build: ./mongoose
+    volumes:
+      - sock:/sock
+    command:
+      - /server
+    ports:
+      - 3008:80/tcp
+
+  python:
+    # http://localhost:3009/
+    # http://fastapi/
+    build: ./python-fastapi
+    volumes:
+      - sock:/sock
+    command:
+      - uvicorn
+      - main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "80"
+      - --no-access-log
+      - --log-level
+      - warning
+      - --workers
+      - "8"
+    ports:
+      - 3009:80/tcp
+
+  pypy:
+    # http://localhost:3010/
+    # http://pypy/
+    volumes:
+      - sock:/sock
+    build:
+      context: ./python-fastapi
+      dockerfile: Dockerfile.pypy
+    command:
+      - uvicorn
+      - main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "80"
+      - --no-access-log
+      - --log-level
+      - warning
+    ports:
+      - 3010:80/tcp
+
+  node:
+    # http://localhost:3011/
+    # http://node/
+    image: node:25-alpine
+    volumes:
+      - sock:/sock
+      - ./nodejs:/w
+    working_dir: /w
+    command:
+      - node
+      - main.js
+    ports:
+      - 3011:80/tcp
+
+  ruby:
+    # http://localhost:3012/
+    # http://ruby/
+    build: ./ruby
+    volumes:
+      - sock:/sock
+    command:
+      - puma
+      - -C
+      - config.rb
+      - -q
+      - -t
+      - "0:16"
+      - -w
+      - "8"
+    ports:
+      - 3012:80/tcp
+
+  client:
+    build: ./client
+    volumes:
+      - sock:/sock
+      - ./:/w
+    working_dir: /w
+    command:
+      - sleep
+      - infinity
+
+volumes:
+  sock:

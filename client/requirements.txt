@@ -1,0 +1,6 @@
+PyYAML
+click
+jinja2
+distro
+scikit-optimize
+matplotlib

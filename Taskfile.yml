@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+env:
+  BENCHMGR_CONFIG: config.yaml
+
+vars:
+  ODIR: out
+  MODE: wrk
+
+tasks:
+  default:
+    desc: show help
+    cmds:
+      - task -l
+    silent: true
+
+  prep:build:
+    desc: build server images
+    cmds:
+      - |
+        for i in */prep.sh ; do
+          cd $(dirname $i)
+          sh prep.sh
+          cd -
+        done
+      - docker compose build --pull
+
+  prep:pull:
+    desc: pull images
+    cmds:
+      - docker compose pull
+
+  prep:boot:
+    desc: boot servers
+    cmds:
+      - docker compose up -d
+
+  post:shutdown:
+    desc: shutdown servers
+    cmds:
+      - docker compose down -v
+
+  post:cleanup:
+    desc: cleanup output dir
+    cmds:
+      - rm -rf {{.ODIR}}
+
+  prep:list:
+    desc: make list
+    vars:
+      TMPDIR:
+        sh: mktemp -d
+    cmds:
+      - defer: rm -rf {{.TMPDIR}}
+      - grep http:// compose.yml|grep -v localhost | cut -f2 -d\# | tr -d ' ' > {{.TMPDIR}}/urls
+      - grep http:// compose.yml|grep -v localhost | cut -f3 -d/ > {{.TMPDIR}}/names
+      - paste -d ' ' {{.TMPDIR}}/names {{.TMPDIR}}/urls > urllist.txt
+
+  prep:
+    desc: prepare benchmark
+    cmds:
+      - task: prep:list
+      - task: prep:pull
+      - task: prep:build
+      - task: prep:boot
+
+  run:list:simple2:
+    desc: run list
+    cmds:
+      - |
+        cat urllist.txt | while read name url ; do
+          mkdir -p {{.ODIR}}/$name
+          python -m benchmgr.main run-simple2 --mode {{.MODE}} $url --output {{.ODIR}}/$name --wet
+        done
+
+  run:list:gp:
+    desc: run list
+    cmds:
+      - |
+        cat urllist.txt | while read name url ; do
+          mkdir -p {{.ODIR}}/$name
+          python -m benchmgr.main run-gp --mode {{.MODE}} $url --output {{.ODIR}}/$name --wet
+        done
+
+  result:summary:
+    desc: make csv
+    cmds:
+      - python -m benchmgr.main summary --mode {{.MODE}} {{.CLI_ARGS}}
+
+  result:plot:
+    desc: make plot
+    cmds:
+      - python -m benchmgr.main plot --mode {{.MODE}} {{.ODIR}}/*
+
+  result:all:
+    desc: make csv for all
+    cmds:
+      - python -m benchmgr.main result-all --mode {{.MODE}} {{.ODIR}}/*
+
+  result:barplot:
+    desc: make bar plot
+    cmds:
+      - python -m benchmgr.main plot-all --mode {{.MODE}} {{.ODIR}}/*

@@ -1,0 +1,6 @@
+FROM golang:1-alpine AS build
+RUN go install github.com/traefik/yaegi/cmd/yaegi@latest
+
+FROM scratch
+COPY --from=build /go/bin/yaegi /
+ENTRYPOINT ["/yaegi"]

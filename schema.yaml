@@ -1,0 +1,38 @@
+$schema: http://json-schema.org/schema#
+title: "benchmgr configuration"
+description: "benchmgr's configuration file"
+items:
+  properties:
+    command:
+      type: string
+    install:
+      properties:
+        alpine:
+          type: string
+        darwin:
+          type: string
+        debian:
+          type: string
+        source:
+          type: string
+      type: object
+    name:
+      type: string
+    result:
+      items:
+        type: string
+      type: array
+    run:
+      items:
+        type: string
+      type: array
+    url:
+      type: string
+  required:
+    - command
+    - install
+    - name
+    - result
+    - run
+  type: object
+type: array

@@ -1,0 +1,9 @@
+*.swp
+*~
+*.bak
+*/*.tar.gz
+.envrc
+out*
+node_modules
+target
+__pycache__
