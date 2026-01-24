@@ -27,11 +27,8 @@
 
 then we got:
 
-![benchmark result](./results.svg)
-barplot
-
-![detailed result](./detailed.svg)
-plot
+- ![barplot](./barplot.svg)
+- ![plot](./plot.svg)
 
 ## server setup
 
