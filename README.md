@@ -67,7 +67,7 @@ configuration:
 ### ziphttp (golang)
 
 ziphttp is a industry-leading web server for static sites. wow!!
-no, this is just something I developed for some personal web sites.
+(no, this is just something I developed for some personal web sites.)
 
 configuration:
 
@@ -82,7 +82,7 @@ configuration:
 
 - implements simple endpoint
 - built with PGO optimized
-    - using wrk to generatePGO profile
+    - using wrk to generate PGO profile
 
 ```go
 func handler(w http.ResponseWriter, r *http.Request) {
