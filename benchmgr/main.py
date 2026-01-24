@@ -59,7 +59,12 @@ def decimal_to_float(obj: Decimal):
 
 def format_option(default="json"):
     def _wrap(func):
-        @click.option("--format", default=default, type=click.Choice(["yaml", "json", "csv"]), show_default=True)
+        @click.option(
+            "--format",
+            default=default,
+            type=click.Choice(["yaml", "json", "csv"]),
+            show_default=True,
+        )
         @functools.wraps(func)
         def _(format, *args, **kwargs):
             res = func(*args, **kwargs)
@@ -82,8 +87,21 @@ def format_option(default="json"):
 
 
 def config_option(func):
-    @click.option("--config", type=click.File(), required=True, envvar="BENCHMGR_CONFIG", show_envvar=True)
-    @click.option("--mode", required=True, default="wrk", envvar="BENCHMGR_MODE", show_default=True, show_envvar=True)
+    @click.option(
+        "--config",
+        type=click.File(),
+        required=True,
+        envvar="BENCHMGR_CONFIG",
+        show_envvar=True,
+    )
+    @click.option(
+        "--mode",
+        required=True,
+        default="wrk",
+        envvar="BENCHMGR_MODE",
+        show_default=True,
+        show_envvar=True,
+    )
     @functools.wraps(func)
     def _(config, mode, *args, **kwargs):
         confdata = yaml.safe_load(config)
@@ -150,9 +168,13 @@ def parse1(config, file: Path) -> dict[str, int | Decimal]:
                         if "percentile_sec" in match:
                             res[key] = Decimal(match.pop("percentile_sec"))
                         elif "percentile_ms" in match:
-                            res[key] = Decimal(match.pop("percentile_ms")) / Decimal(1000)
+                            res[key] = Decimal(match.pop("percentile_ms")) / Decimal(
+                                1000
+                            )
                         elif "percentile_us" in match:
-                            res[key] = Decimal(match.pop("percentile_us")) / Decimal(1000000)
+                            res[key] = Decimal(match.pop("percentile_us")) / Decimal(
+                                1000000
+                            )
                         elif "percentile_time" in match:
                             res[key] = parse_time(match.pop("percentile_time"))
                     for k, v in match.items():
@@ -184,7 +206,9 @@ def parse1(config, file: Path) -> dict[str, int | Decimal]:
 @verbose_option
 @config_option
 @format_option()
-@click.argument("datafiles", nargs=-1, type=click.Path(exists=True, file_okay=True, dir_okay=False))
+@click.argument(
+    "datafiles", nargs=-1, type=click.Path(exists=True, file_okay=True, dir_okay=False)
+)
 def parse(config, datafiles: tuple[str]):
     """parse result files"""
     return [dict(filename=x, **parse1(config, Path(x))) for x in datafiles]
@@ -216,7 +240,9 @@ def select_cparam(results: list[Cparam], limit: Decimal) -> Cparam | None:
         prevr.pop()
     prevc = sorted(prevr, key=lambda f: f.concurrency)
     if prevc[-1].latency < limit and (
-        prevc[-1].latency == 0 or prevc[-1].concurrency / prevc[-1].latency < prevc[-1].throughput * Decimal(1.5)
+        prevc[-1].latency == 0
+        or prevc[-1].concurrency / prevc[-1].latency
+        < prevc[-1].throughput * Decimal(1.5)
     ):
         try:
             suggest = int(prevc[-1].concurrency * (limit / prevc[-1].latency))
@@ -230,7 +256,10 @@ def select_cparam(results: list[Cparam], limit: Decimal) -> Cparam | None:
         return Cparam(suggest)
     # select max distance(throughput)
     prevt = sorted(prevr, key=lambda f: f.throughput)
-    diff = [(x, prevt[x + 1].throughput - prevt[x].throughput) for x in range(len(prevt) - 1)]
+    diff = [
+        (x, prevt[x + 1].throughput - prevt[x].throughput)
+        for x in range(len(prevt) - 1)
+    ]
     diff.sort(key=lambda f: f[-1])
     idx = diff[-1][0]
     suggest = Cparam(int((prevt[idx].concurrency + prevt[idx + 1].concurrency) / 2))
@@ -238,7 +267,10 @@ def select_cparam(results: list[Cparam], limit: Decimal) -> Cparam | None:
         _log.debug("choose by throughput %s", suggest.concurrency)
         return suggest
     # select max distance(depth)
-    diff = [(x, prevc[x + 1].concurrency - prevc[x].concurrency) for x in range(len(prevc) - 1)]
+    diff = [
+        (x, prevc[x + 1].concurrency - prevc[x].concurrency)
+        for x in range(len(prevc) - 1)
+    ]
     diff.sort(key=lambda f: f[-1])
     idx = diff[-1][0]
     suggest = Cparam(int((prevc[idx].concurrency + prevc[idx + 1].concurrency) / 2))
@@ -257,26 +289,56 @@ def select_cparam(results: list[Cparam], limit: Decimal) -> Cparam | None:
     return None
 
 
-def runcmd(cmd: str, args: list[str], stdout: Path, stderr: Path, timeout: Decimal | int | float, dry: bool) -> bool:
+def runcmd(
+    cmd: str,
+    args: list[str],
+    stdout: Path,
+    stderr: Path,
+    timeout: Decimal | int | float,
+    dry: bool,
+) -> bool:
     if stdout.exists() and stdout.stat().st_size != 0:
         _log.info("skip running %s args=%s", cmd, args)
         return True
-    _log.info("running %s, args=%s, stdout=%s, timeout=%s, dry=%s", cmd, args, stdout, timeout, dry)
+    _log.info(
+        "running %s, args=%s, stdout=%s, timeout=%s, dry=%s",
+        cmd,
+        args,
+        stdout,
+        timeout,
+        dry,
+    )
     if not dry:
         try:
             with open(stdout, "w") as outfp, open(stderr, "w") as errfp:
                 subprocess.check_call(
-                    [cmd, *args], stdin=subprocess.DEVNULL, stdout=outfp, stderr=errfp, timeout=float(timeout)
+                    [cmd, *args],
+                    stdin=subprocess.DEVNULL,
+                    stdout=outfp,
+                    stderr=errfp,
+                    timeout=float(timeout),
                 )
                 return True
         except subprocess.CalledProcessError:
-            _log.warning("command failed: stdout=%s, stderr=%s", stdout.read_text(), stderr.read_text())
+            _log.warning(
+                "command failed: stdout=%s, stderr=%s",
+                stdout.read_text(),
+                stderr.read_text(),
+            )
             return False
         except FileNotFoundError:
-            _log.error("command not found?: stdout=%s, stderr=%s", stdout.read_text(), stderr.read_text())
+            _log.error(
+                "command not found?: stdout=%s, stderr=%s",
+                stdout.read_text(),
+                stderr.read_text(),
+            )
             raise
         except Exception:
-            _log.error("something went wrong: stdout=%s, stderr=%s", stdout.read_text(), stderr.read_text())
+            _log.error(
+                "something went wrong: stdout=%s, stderr=%s",
+                stdout.read_text(),
+                stderr.read_text(),
+            )
             raise
     return False
 
@@ -460,7 +522,12 @@ def runfunc(
 @click.option("--dry/--wet", default=True, show_default=True)
 @click.option("--latency-key", default="99%tile", show_default=True)
 @click.option("--throughput-key", default="reqs", show_default=True)
-@click.option("--optimizer", type=click.Choice(["gp", "gbrt", "forest", "dummy"]), default="gp", show_default=True)
+@click.option(
+    "--optimizer",
+    type=click.Choice(["gp", "gbrt", "forest", "dummy"]),
+    default="gp",
+    show_default=True,
+)
 @click.argument("url")
 def run_gp(
     config: dict,
@@ -518,9 +585,13 @@ def run_gp(
         click.echo(f"result: {-result.fun}")
 
 
-def read_dir(inputd: Path, prefix: str, throughput_key: str, latency_key: str, config: dict):
+def read_dir(
+    inputd: Path, prefix: str, throughput_key: str, latency_key: str, config: dict
+):
     res = []
-    files = sorted(inputd.glob(prefix + "-*.stdout"), key=lambda f: int(f.stem.split("-")[-1]))
+    files = sorted(
+        inputd.glob(prefix + "-*.stdout"), key=lambda f: int(f.stem.split("-")[-1])
+    )
     for file in files:
         data = parse1(config, file)
         if throughput_key in data and latency_key in data:
@@ -544,7 +615,13 @@ def summary(config: dict, input: str, latency_key: str, throughput_key: str):
     """summarize throughput/latency"""
     inputd = Path(input)
     prefix = config.get("command", "")
-    return read_dir(inputd=inputd, prefix=prefix, throughput_key=throughput_key, latency_key=latency_key, config=config)
+    return read_dir(
+        inputd=inputd,
+        prefix=prefix,
+        throughput_key=throughput_key,
+        latency_key=latency_key,
+        config=config,
+    )
 
 
 @cli.command()
@@ -554,8 +631,12 @@ def summary(config: dict, input: str, latency_key: str, throughput_key: str):
 @click.option("--latency-key", default="99%tile", show_default=True)
 @click.option("--throughput-key", default="reqs", show_default=True)
 @click.option("--limit", type=float, default=0.3, show_default=True)
-@click.argument("input", type=click.Path(dir_okay=True, file_okay=False, exists=True), nargs=-1)
-def result_all(config: dict, input: tuple[str], latency_key: str, throughput_key: str, limit: float):
+@click.argument(
+    "input", type=click.Path(dir_okay=True, file_okay=False, exists=True), nargs=-1
+)
+def result_all(
+    config: dict, input: tuple[str], latency_key: str, throughput_key: str, limit: float
+):
     """summarize max throughput"""
     prefix = config.get("command", "")
     ret = []
@@ -563,11 +644,17 @@ def result_all(config: dict, input: tuple[str], latency_key: str, throughput_key
     for i in input:
         inputd = Path(i)
         res = read_dir(
-            inputd=inputd, prefix=prefix, throughput_key=throughput_key, latency_key=latency_key, config=config
+            inputd=inputd,
+            prefix=prefix,
+            throughput_key=throughput_key,
+            latency_key=latency_key,
+            config=config,
         )
         if len(res) == 0:
             continue
-        maxv = max([x for x in res if x["latency"] < limit], key=lambda f: f["throughput"])
+        maxv = max(
+            [x for x in res if x["latency"] < limit], key=lambda f: f["throughput"]
+        )
         ret.append(dict(name=inputd.name, **maxv))
     return ret
 
@@ -580,8 +667,18 @@ def result_all(config: dict, input: tuple[str], latency_key: str, throughput_key
 @click.option("--title")
 @click.option("--limit", type=float, default=0.3, show_default=True)
 @click.option("--save")
-@click.argument("input", type=click.Path(dir_okay=True, file_okay=False, exists=True), nargs=-1)
-def plot(config: dict, input: tuple[str], latency_key: str, throughput_key: str, title: str, limit: float, save: str):
+@click.argument(
+    "input", type=click.Path(dir_okay=True, file_okay=False, exists=True), nargs=-1
+)
+def plot(
+    config: dict,
+    input: tuple[str],
+    latency_key: str,
+    throughput_key: str,
+    title: str,
+    limit: float,
+    save: str,
+):
     """plot throughput/latency"""
     import matplotlib.pyplot as plt
 
@@ -598,11 +695,17 @@ def plot(config: dict, input: tuple[str], latency_key: str, throughput_key: str,
     for i in input:
         inputd = Path(i)
         res = read_dir(
-            inputd=inputd, prefix=prefix, throughput_key=throughput_key, latency_key=latency_key, config=config
+            inputd=inputd,
+            prefix=prefix,
+            throughput_key=throughput_key,
+            latency_key=latency_key,
+            config=config,
         )
         if len(res) == 0:
             continue
-        maxv = max([x for x in res if x["latency"] < limit], key=lambda f: f["throughput"])
+        maxv = max(
+            [x for x in res if x["latency"] < limit], key=lambda f: f["throughput"]
+        )
         X = [x["throughput"] for x in res]
         Y = [x["latency"] for x in res]
         _log.debug("plot %s / %s", X, Y)
@@ -623,9 +726,17 @@ def plot(config: dict, input: tuple[str], latency_key: str, throughput_key: str,
 @click.option("--throughput-key", default="reqs", show_default=True)
 @click.option("--limit", type=float, default=0.3, show_default=True)
 @click.option("--save")
-@click.argument("input", type=click.Path(dir_okay=True, file_okay=False, exists=True), nargs=-1)
+@click.argument(
+    "input", type=click.Path(dir_okay=True, file_okay=False, exists=True), nargs=-1
+)
 def plot_all(
-    config: dict, input: tuple[str], latency_key: str, throughput_key: str, limit: float, title: str, save: str
+    config: dict,
+    input: tuple[str],
+    latency_key: str,
+    throughput_key: str,
+    limit: float,
+    title: str,
+    save: str,
 ):
     """plot max throughput"""
     import matplotlib.pyplot as plt
@@ -636,11 +747,17 @@ def plot_all(
     for i in input:
         inputd = Path(i)
         res = read_dir(
-            inputd=inputd, prefix=prefix, throughput_key=throughput_key, latency_key=latency_key, config=config
+            inputd=inputd,
+            prefix=prefix,
+            throughput_key=throughput_key,
+            latency_key=latency_key,
+            config=config,
         )
         if len(res) == 0:
             continue
-        maxv = max([x for x in res if x["latency"] < limit], key=lambda f: f["throughput"])
+        maxv = max(
+            [x for x in res if x["latency"] < limit], key=lambda f: f["throughput"]
+        )
         ret.append(dict(name=inputd.name, **maxv))
 
     fig, ax = plt.subplots()
