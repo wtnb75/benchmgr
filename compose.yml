@@ -101,7 +101,7 @@ services:
 
   python:
     # http://localhost:3009/
-    # http://fastapi/
+    # http://python/
     build: ./python-fastapi
     volumes:
       - sock:/sock

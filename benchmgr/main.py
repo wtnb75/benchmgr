@@ -326,6 +326,13 @@ def runcmd(
                 stderr.read_text(),
             )
             return False
+        except subprocess.TimeoutExpired:
+            _log.warning(
+                "command timeout: stdout=%s, stderr=%s",
+                stdout.read_text(),
+                stderr.read_text(),
+            )
+            return False
         except FileNotFoundError:
             _log.error(
                 "command not found?: stdout=%s, stderr=%s",

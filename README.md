@@ -132,7 +132,7 @@ configuration:
 
 - implements simple endpoint
     - small modification from [actix-http/examples/bench.rs](https://github.com/actix/actix-web/blob/main/actix-http/examples/bench.rs)
-- workers=4
+- workers=auto(num of cores)
 - no access log
 
 ```rust
@@ -146,7 +146,7 @@ configuration:
                 })
                 .tcp()
         })?
-        .workers(4)
+        .workers(std::thread::available_parallelism().unwrap().get())
         .run()
         .await
 ```
