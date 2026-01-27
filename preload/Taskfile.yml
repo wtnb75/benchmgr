@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+vars:
+  SRC: unixtcp.c
+
+tasks:
+  default:
+    desc: command list
+    cmds:
+      - "{{.TASK_EXE}} -l"
+    silent: true
+
+  build:darwin:
+    desc: build for mac
+    cmds:
+      - clang -Wall -o unixtcp.dylib -dynamiclib unixtcp.c
+
+  run:darwin:
+    desc: run for mac
+    requires:
+      vars:
+        - PORT
+        - NAME
+    cmds:
+      - echo "does not work..."
+      - env DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES=./unixtcp.dylib SOCKUNIX_PORT={{.PORT}} SOCKUNIX_PATH={{.NAME}} {{.CLI_ARGS}}
+
+  build:linux:
+    desc: build for linux
+    cmds:
+      - gcc -Wall -o unixtcp.so -shared unixtcp.c
+
+  run:linux:
+    desc: run for mac
+    requires:
+      vars:
+        - PORT
+        - NAME
+    cmds:
+      - env LD_PRELOAD=./unixtcp.so SOCKUNIX_PORT={{.PORT}} SOCKUNIX_PATH={{.NAME}} {{.CLI_ARGS}}
+
+  build:
+    desc: build
+    cmds:
+      - task: build:{{OS}}
+
+  run:
+    desc: run
+    cmds:
+      - task: run:{{OS}}

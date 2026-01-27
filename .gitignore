@@ -7,3 +7,5 @@ out*
 node_modules
 target
 __pycache__
+*.so
+*.dylib
