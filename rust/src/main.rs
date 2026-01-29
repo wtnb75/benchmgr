@@ -1,4 +1,4 @@
-use std::{convert::Infallible, io, time::Duration, env};
+use std::{convert::Infallible, env, io, time::Duration};
 
 use actix_http::{HttpService, Request, Response, StatusCode};
 use actix_server::Server;

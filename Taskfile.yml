@@ -9,9 +9,13 @@ vars:
   ODIR: out
   MODE: wrk
 
+includes:
+  preload:
+    taskfile: ./preload
+    dir: ./preload
+
 tasks:
   default:
-    desc: show help
     cmds:
       - task -l
     silent: true
@@ -103,3 +107,12 @@ tasks:
     desc: make bar plot
     cmds:
       - python -m benchmgr.main plot-all --mode {{.MODE}} {{.ODIR}}/*
+
+  format:
+    desc: lint/format
+    cmds:
+      - ruff check python-fastapi/ benchmgr/
+      - ruff format python-fastapi/ benchmgr/
+      - rustfmt --edition 2024 rust/src/*.rs
+      - clang-format -i mongoose/*.c preload/*.c
+      - dockerfmt -n -w */Dockerfile*
