@@ -7,39 +7,56 @@ vars:
 
 tasks:
   default:
-    desc: command list
     cmds:
       - "{{.TASK_EXE}} -l"
     silent: true
 
   build:darwin:
     desc: build for mac
+    vars:
+      BASE:
+        sh: basename {{.SRC}} .c
+      EXT: .dylib
     cmds:
-      - clang -Wall -o unixtcp.dylib -dynamiclib unixtcp.c
+      - clang -O3 -Wall -o {{.BASE}}{{.EXT}} -dynamiclib {{.SRC}}
+      - clang -O3 -DDEBUG -Wall -o {{.BASE}}-debug{{.EXT}} -dynamiclib {{.SRC}}
 
   run:darwin:
     desc: run for mac
+    vars:
+      BASE:
+        sh: basename {{.SRC}} .c
+      EXT: .dylib
     requires:
       vars:
         - PORT
         - NAME
     cmds:
       - echo "does not work..."
-      - env DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES=./unixtcp.dylib SOCKUNIX_PORT={{.PORT}} SOCKUNIX_PATH={{.NAME}} {{.CLI_ARGS}}
+      - env DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES=./{{.BASE}}{{.EXT}} SOCKUNIX_PORT={{.PORT}} SOCKUNIX_PATH={{.NAME}} {{.CLI_ARGS}}
 
   build:linux:
     desc: build for linux
+    vars:
+      BASE:
+        sh: basename {{.SRC}} .c
+      EXT: .so
     cmds:
-      - gcc -Wall -o unixtcp.so -shared unixtcp.c
+      - gcc -O3 -Wall -o {{.BASE}}{{.EXT}} -shared {{.SRC}}
+      - gcc -O3 -Wall -DDEBUG -o {{.BASE}}-debug{{.EXT}} -shared {{.SRC}}
 
   run:linux:
     desc: run for mac
+    vars:
+      BASE:
+        sh: basename {{.SRC}} .c
+      EXT: .so
     requires:
       vars:
         - PORT
         - NAME
     cmds:
-      - env LD_PRELOAD=./unixtcp.so SOCKUNIX_PORT={{.PORT}} SOCKUNIX_PATH={{.NAME}} {{.CLI_ARGS}}
+      - env LD_PRELOAD=./{{.BASE}}{{.EXT}} SOCKUNIX_PORT={{.PORT}} SOCKUNIX_PATH={{.NAME}} {{.CLI_ARGS}}
 
   build:
     desc: build
@@ -50,3 +67,8 @@ tasks:
     desc: run
     cmds:
       - task: run:{{OS}}
+
+  clean:
+    desc: cleanup
+    cmds:
+      - rm -rf *.so *.dylib
