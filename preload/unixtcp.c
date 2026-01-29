@@ -69,7 +69,7 @@ int bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
     }
     struct sockaddr_un next_addr;
     next_addr.sun_family = AF_UNIX;
-    strncpy(next_addr.sun_path, path, sizeof(next_addr.sun_path));
+    strncpy(next_addr.sun_path, path, sizeof(next_addr.sun_path) - 1);
     return _orig_bind(sockfd2, (const struct sockaddr*)&next_addr, sizeof(next_addr));
   }
   return _orig_bind(sockfd, addr, addrlen);
@@ -87,7 +87,7 @@ int connect(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
     }
     struct sockaddr_un next_addr;
     next_addr.sun_family = AF_UNIX;
-    strncpy(next_addr.sun_path, path, sizeof(next_addr.sun_path));
+    strncpy(next_addr.sun_path, path, sizeof(next_addr.sun_path) - 1);
     return _orig_connect(sockfd2, (const struct sockaddr*)&next_addr, sizeof(next_addr));
   }
   return _orig_connect(sockfd, addr, addrlen);

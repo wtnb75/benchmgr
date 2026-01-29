@@ -54,10 +54,16 @@ services:
     command:
       - /empty-go
       - -listen=:80
-    volumes:
-      - sock:/sock
     ports:
       - 3005:80/tcp
+
+  golang-unix:
+    build: ./golang
+    command:
+      - /empty-go
+      - -listen=unix:/sock/golang.sock
+    volumes:
+      - sock:/sock
 
   yaegi:
     # http://localhost:3006/
@@ -67,13 +73,24 @@ services:
       dockerfile: Dockerfile.yaegi
     volumes:
       - ./golang:/w
-      - sock:/sock
     working_dir: /w
     command:
       - main.go
       - -listen=:80
     ports:
       - 3006:80/tcp
+
+  yaegi-unix:
+    build:
+      context: ./golang
+      dockerfile: Dockerfile.yaegi
+    volumes:
+      - ./golang:/w
+      - sock:/sock
+    working_dir: /w
+    command:
+      - main.go
+      - -listen=unix:/sock/yaegi.sock
 
   rust:
     # http://localhost:3007/

@@ -88,6 +88,19 @@ tasks:
           python -m benchmgr.main run-gp --mode {{.MODE}} $url --output {{.ODIR}}/$name --wet
         done
 
+  run:list:gp:unix:
+    desc: run list
+    env:
+      LD_PRELOAD: preload/unixtcp.so
+      SOCKUNIX_PORT: "9999"
+    cmds:
+      - |
+        for name in /sock/*.sock ; do
+          base=$(basename $name .sock)
+          mkdir -p {{.ODIR}}/${base}-unix
+          SOCKUNIX_PATH=${name} python -m benchmgr.main run-gp --mode {{.MODE}} http://localhost:9999/ --output {{.ODIR}}/${base}-unix --wet
+        done
+
   result:summary:
     desc: make csv
     cmds:
