@@ -4,6 +4,7 @@ version: "3"
 
 env:
   BENCHMGR_CONFIG: config.yaml
+  BENCHMGR_DURATION: 20
 
 vars:
   ODIR: out

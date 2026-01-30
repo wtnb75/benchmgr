@@ -19,10 +19,11 @@ services:
       - ./data/httpd:/usr/local/apache2/conf:ro
     ports:
       - 3002:80/tcp
+
   traefik:
     # http://localhost:3003/ping
     # http://traefik/ping
-    image: traefik:v2
+    image: traefik:v3
     command:
       - --ping=true
       - --ping.entryPoint=ping
@@ -37,7 +38,6 @@ services:
     image: ghcr.io/wtnb75/ziphttp:main
     volumes:
       - ./data/ziphttp:/zip:ro
-      - sock:/sock
     environment:
       ZIPHTTP_ARCHIVE: /zip/content.zip
     command:
@@ -46,6 +46,18 @@ services:
       - --quiet
     ports:
       - 3004:80/tcp
+
+  ziphttp-unix:
+    image: ghcr.io/wtnb75/ziphttp:main
+    volumes:
+      - ./data/ziphttp:/zip:ro
+      - sock:/sock
+    environment:
+      ZIPHTTP_ARCHIVE: /zip/content.zip
+    command:
+      - webserver
+      - --listen=unix:/sock/ziphttp.sock
+      - --quiet
 
   golang:
     # http://localhost:3005/

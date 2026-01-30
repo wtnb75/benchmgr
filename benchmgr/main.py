@@ -43,6 +43,7 @@ def verbose_option(func):
     @functools.wraps(func)
     def _(verbose, *args, **kwargs):
         set_verbose(verbose)
+        _log.info("args=%s, kwargs=%s", args, kwargs)
         return func(*args, **kwargs)
 
     return _
@@ -202,6 +203,29 @@ def parse1(config, file: Path) -> dict[str, int | Decimal]:
     return res
 
 
+def benchbase_option(func):
+    @click.option("--interval", type=float)
+    @click.option(
+        "--duration",
+        type=TimeParam(),
+        default=Decimal(30),
+        envvar="BENCHMGR_DURATION",
+        show_default=True,
+        show_envvar=True,
+    )
+    @click.option("--method", default="GET", show_default=True)
+    @click.option(
+        "--output", type=click.Path(dir_okay=True, file_okay=False, exists=True)
+    )
+    @click.option("--count", type=int, default=10, show_default=True)
+    @click.option("--dry/--wet", default=True, show_default=True)
+    @functools.wraps(func)
+    def _(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return _
+
+
 @cli.command()
 @verbose_option
 @config_option
@@ -353,14 +377,9 @@ def runcmd(
 @cli.command()
 @verbose_option
 @config_option
-@click.option("--interval", type=float)
-@click.option("--duration", type=TimeParam(), default=Decimal(30), show_default=True)
-@click.option("--method", default="GET", show_default=True)
-@click.option("--output", type=click.Path(dir_okay=True, file_okay=False, exists=True))
-@click.option("--count", type=int, default=10, show_default=True)
+@benchbase_option
 @click.option("--min-depth", default=1, show_default=True)
 @click.option("--max-depth", default=100, show_default=True)
-@click.option("--dry/--wet", default=True, show_default=True)
 @click.argument("url")
 def run_simple1(
     config: dict,
@@ -411,13 +430,8 @@ def run_simple1(
 @cli.command()
 @verbose_option
 @config_option
-@click.option("--interval", type=float)
-@click.option("--duration", type=TimeParam(), default=Decimal(30), show_default=True)
-@click.option("--method", default="GET", show_default=True)
-@click.option("--output", type=click.Path(dir_okay=True, file_okay=False, exists=True))
-@click.option("--count", type=int, default=10, show_default=True)
+@benchbase_option
 @click.option("--limit", type=float, default=0.3, show_default=True)
-@click.option("--dry/--wet", default=True, show_default=True)
 @click.option("--latency-key", default="99%tile", show_default=True)
 @click.option("--throughput-key", default="reqs", show_default=True)
 @click.argument("url")
@@ -518,15 +532,10 @@ def runfunc(
 @cli.command()
 @verbose_option
 @config_option
-@click.option("--interval", type=float)
-@click.option("--duration", type=TimeParam(), default=Decimal(30), show_default=True)
-@click.option("--method", default="GET", show_default=True)
-@click.option("--output", type=click.Path(dir_okay=True, file_okay=False, exists=True))
-@click.option("--count", type=int, default=10, show_default=True)
+@benchbase_option
 @click.option("--min-depth", default=1, show_default=True)
 @click.option("--max-depth", default=100, show_default=True)
 @click.option("--limit", type=float, default=0.3, show_default=True)
-@click.option("--dry/--wet", default=True, show_default=True)
 @click.option("--latency-key", default="99%tile", show_default=True)
 @click.option("--throughput-key", default="reqs", show_default=True)
 @click.option(

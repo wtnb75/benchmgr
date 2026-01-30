@@ -206,7 +206,7 @@ by default, we focus on value of 99%tile latency. if it exceed limit, discard th
 
 ### wrk (default)
 
-wrk is one of the best HTTP load generator.
+[wrk](https://github.com/wg/wrk) is one of the best HTTP load generator.
 
 we use these options:
 
@@ -231,7 +231,7 @@ options:
 
 ### hey
 
-hey supports HTTP/2 endpoint.
+[hey](https://github.com/rakyll/hey) supports HTTP/1 and HTTP/2.
 
 | hey option | benchmgr option |
 |---|---|
@@ -241,7 +241,7 @@ hey supports HTTP/2 endpoint.
 
 ### go-wrk
 
-go-wrk
+[go-wrk](https://github.com/tsliwowicz/go-wrk) supports HTTP/1 and HTTP/2. written in Golang
 
 | go-wrk option | benchmgr option |
 |---|---|
@@ -251,7 +251,8 @@ go-wrk
 
 ### rewrk
 
-rewrk
+[rewrk](https://github.com/lnx-search/rewrk/tree/master) supports HTTP/1 and HTTP/2. written in Rust
+
 
 | rewrk option | benchmgr option |
 |---|---|
