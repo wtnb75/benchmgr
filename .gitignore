@@ -9,3 +9,6 @@ target
 __pycache__
 *.so
 *.dylib
+*.conf0
+*.properties0
+*.conf.txt

@@ -202,6 +202,16 @@ services:
     ports:
       - 3012:80/tcp
 
+  openlitespeed:
+    # http://localhost:3013/
+    # http://openlitespeed/
+    image: litespeedtech/openlitespeed
+    tmpfs: /var/www/vhosts/localhost/html
+    volumes:
+      - ./data/lsws:/usr/local/lsws/conf
+    ports:
+      - 3013:80/tcp
+
   client:
     build: ./client
     volumes:
