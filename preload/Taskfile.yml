@@ -46,7 +46,7 @@ tasks:
       - gcc -O3 -Wall -DDEBUG -o {{.BASE}}-debug{{.EXT}} -shared {{.SRC}}
 
   run:linux:
-    desc: run for mac
+    desc: run for linux
     vars:
       BASE:
         sh: basename {{.SRC}} .c

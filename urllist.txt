@@ -10,3 +10,4 @@ python http://python/
 pypy http://pypy/
 node http://node/
 ruby http://ruby/
+openlitespeed http://openlitespeed/

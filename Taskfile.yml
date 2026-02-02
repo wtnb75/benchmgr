@@ -63,6 +63,11 @@ tasks:
       - grep http:// compose.yml|grep -v localhost | cut -f3 -d/ > {{.TMPDIR}}/names
       - paste -d ' ' {{.TMPDIR}}/names {{.TMPDIR}}/urls > urllist.txt
 
+  prep:postboot:
+    desc: postboot
+    cmds:
+      - docker compose exec openlitespeed touch /var/www/vhosts/localhost/html/index.html
+
   prep:
     desc: prepare benchmark
     cmds:
@@ -70,6 +75,7 @@ tasks:
       - task: prep:pull
       - task: prep:build
       - task: prep:boot
+      - task: prep:postboot
 
   run:list:simple2:
     desc: run list
